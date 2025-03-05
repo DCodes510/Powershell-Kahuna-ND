@@ -33,3 +33,17 @@ IF($Groupexist) {
                   Write-Output "Group creation cancelled"
                   }
     }
+
+    #### Migration
+$Londoners = Get-ADUser -Filter{city -eq 'London'} -Properties City,distinguishedname,samaccountname
+#####$LondonUser = "CN=London User,$OUpath"
+
+ForEach($Users in $Londoners) 
+   
+        {
+        Move-ADObject -Identity $users.distinguishedname -TargetPath $OUPath  
+        Add-ADGroupMember -Identity $Groupname -Members $users.samaccountname
+        
+        Write-Output "Moved user '$($Users.distinguishedname)' to $Groupname"
+        }
+    Write-host "$Londoners moved to $Groupname"
