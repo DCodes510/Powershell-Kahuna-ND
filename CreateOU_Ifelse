@@ -1,0 +1,15 @@
+$OUname = "London"
+$DomainDN = "DC=Adatum,DC=com"
+$OUPath = "OU=$OUName,$DomainDN"
+
+ ###Check on executive policy status
+IF(Get-ADOrganizationalUnit -filter {Name -like $OUname})
+        {
+        Write-Output "The OU $OUname already exist"
+        }
+        Else
+            {
+            New-ADOrganizationalUnit -Name $OUname -Path $DomainDN
+            Write-Output "The OU $OUname has been created!"
+            }
+
