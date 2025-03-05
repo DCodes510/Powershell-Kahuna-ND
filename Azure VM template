@@ -1,0 +1,14 @@
+$cred = get-credential -Message "Enter an admin username and password for the operating system"
+
+###Params(hash table) for Azure VM config | port 3389 = RDP
+$vMParams = @{
+              ResourceGroupName = '<rgname)'
+              Name              = 'TestVM'
+              Size              = 'Standard_D2s_v3'
+              Location          = 'eastus'
+              Imagename         = 'Win2019Datacenter'
+              PublicIpAddressName = 'TestpublicIp'
+              Credential        = $cred
+              OpenPorts         = 3389
+              }
+              
