@@ -13,3 +13,23 @@ IF(Get-ADOrganizationalUnit -filter {Name -like $OUname})
             Write-Output "The OU $OUname has been created!"
             }
 
+
+####New Group inside OU (yes/no)
+
+$Groupname = "London User"
+
+$Groupexist = Get-ADGroup  -filter {name -like $Groupname}
+    
+IF($Groupexist) {
+    Write-Output "Group $Groupname already exist in $OUname"
+     } Else {
+       $Confirm = Read-Host "Group $Groupname does not exist in $OUname. Do you want to create it? (yes/no)"
+         
+    
+        if($Confirm -eq 'yes'){
+            New-ADGroup -Name "$Groupname" -GroupScope Global -Path $OUPath
+            Write-output "$Groupname group has been created in $OUname"
+            }else{
+                  Write-Output "Group creation cancelled"
+                  }
+    }
