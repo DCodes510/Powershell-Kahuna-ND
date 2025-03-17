@@ -1,0 +1,23 @@
+###Create CSV Account
+
+Name,SamAccountName,UserPrincipalName,Path,Password
+
+###Script
+### Path to CSV 
+$csvPath = "C:\Path\To\Users.csv"
+
+### Import the CSV data
+$users = Import-Csv -Path $csvPath
+
+### Loop each user in CSV
+foreach ($user in $users) {
+    New-ADUser 
+        -Name $user.Name 
+        -SamAccountName $user.SamAccountName 
+        -UserPrincipalName $user.UserPrincipalName 
+        -Path $user.Path 
+        -AccountPassword (ConvertTo-SecureString $user.Password -AsPlainText -Force) 
+        -Enabled $true
+}
+
+Write-Host "All users have been successfully created!"
