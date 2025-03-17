@@ -1,0 +1,9 @@
+###Last Logon Date/Time
+
+Get-ADUser -Identity "Neil" -Properties LastLogonTimeStamp | Select-Object Name, @{Name="LastLogonDate";Expression={[DateTime]::FromFileTime($_.LastLogonTimeStamp)}}
+
+###Simulate 30days no logon
+$user = get-aduser -identity "Neil" -Properties LastLogonTimeStamp
+$30daysago = (Get-Date).AddDays(-30)
+$time = $30daysago.ToFileTime()
+Set-aduser -identity $user -replace @{LastLogonTimeStamp=$time}
