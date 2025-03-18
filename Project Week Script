@@ -1,0 +1,19 @@
+###Move Disable User out of current container
+
+##Variables
+$30daynouse = get-aduser -filter {Enabled -eq $true -and Lastlogdate -lt $datethreshold} -properties Lastlogondate
+$disabledcontainer = "OU=disabled users,DC=contoso,DC=com"
+$datethreshold = (get-date).AddDays(-30)
+
+###Script
+foreach($inactiveusers in $30daynouse) {
+            write-host "$($inactiveusers.samaccountname) moved due to last logon was $(inactiveusers.Lastlogdate)"
+
+            Move-ADObject -Identity $inactiveusers.distinguishedname -TargetPath $disabledcontainer
+
+            }
+
+Write-host "Inactive user moved to Disabled Users Container"
+
+
+###Need to add trigger 
