@@ -5,14 +5,15 @@ $datethreshold = (get-date).AddDays(-30)
 $30daynouse = get-aduser -filter {Enabled -eq $true -and Lastlogondate -lt $datethreshold} -properties Lastlogondate
 $disabledcontainer = "OU=disabled users,DC=contoso,DC=com"
 $DisUserList = "E:\DisabledUsers\DisabledUsers.txt"
-$movedate = (get-date -Format "MM:dd:yyyy hh:mm:ss")
+$movedate = (get-date -Format "MM-dd-yyyy hh:mm:ss")
 $moveduser = (get-aduser -filter {Enabled -eq $true -and Lastlogondate -lt $datethreshold} -properties Lastlogondate).name
 $logmessage = "$moveduser disabled on $movedate"
 
 ###Script
 foreach($inactiveusers in $30daynouse) {
+            Start-Sleep -Seconds 5
             write-host "$($inactiveusers.samaccountname) moved due to last logon was $($inactiveusers.Lastlogondate)"
-
+            start-sleep -Seconds 5
             Move-ADObject -Identity $inactiveusers.distinguishedname -TargetPath $disabledcontainer
 
             Add-content -Path $DisUserList -Value $logmessage
@@ -25,32 +26,4 @@ Write-host "Inactive user moved to Disabled Users Container"
 
 
 
-# Create scheduled task for Browser Favorite/Bookmark Backups
-$action = New-ScheduledTaskAction -Execute "powershell.exe" -Argument "-ExecutionPolicy Bypass  -WindowStyle Minimized -File C:\NH\PS\Copy_Favorite-Bookmarks_to_OneDrive.ps1"  -WorkingDirectory "C:\NH\PS"
-$trigger = New-ScheduledTaskTrigger -AtLogOn
-$trigger.Delay ='PT2M' 
-$trigger.ExecutionTimeLimit = 'PT5M'
-$principal = New-ScheduledTaskPrincipal -GroupId "BUILTIN\Users" -RunLevel Limited
-$settings = New-ScheduledTaskSettingsSet -Compatibility Win8 -RestartCount 3 -RestartInterval (New-TimeSpan -Minutes 5) -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries -DontStopOnIdleEnd -ExecutionTimeLimit 5 -Priority 8 -StartWhenAvailable
-$task = New-ScheduledTask -Description "Backup signed-in user's Edge Chromium Favorites and Google Chrome Bookmarks to their OneDrive" -Action $action -Principal $principal -Trigger $trigger -Settings $settings
-Register-ScheduledTask -TaskName "BrowserFavorites_Backup" -InputObject $task -TaskPath \NH -Force
-
-# Define the log file path
-$LogFilePath = "C:\Logs\UserLogonActions.txt"
-
-# Function to log activity
-function Log-Activity {
-    param ([string]$Message)
-    $Timestamp = (Get-Date -Format "yyyy-MM-dd HH:mm:ss")
-    $LogMessage = "$Timestamp - $Message"
-    Add-Content -Path $LogFilePath -Value $LogMessage
-}
-
-# Log the user logon event
-$UserName = $env:USERNAME
-Log-Activity "User logged in: $UserName"
-
-# Example: Track specific user actions (e.g., starting a process)
-# Here you could add custom actions if needed
-Write-Host "User logon logged successfully!"
 

@@ -761,3 +761,23 @@ Get-PSSession
 #SMB (port# 445)
 
 ###
+
+
+# Define the log file path
+$LogFilePath = "C:\Logs\UserLogonActions.txt"
+
+# Function to log activity
+function Log-Activity {
+    param ([string]$Message)
+    $Timestamp = (Get-Date -Format "yyyy-MM-dd HH:mm:ss")
+    $LogMessage = "$Timestamp - $Message"
+    Add-Content -Path $LogFilePath -Value $LogMessage
+}
+
+# Log the user logon event
+$UserName = $env:USERNAME
+Log-Activity "User logged in: $UserName"
+
+# Example: Track specific user actions (e.g., starting a process)
+# Here you could add custom actions if needed
+Write-Host "User logon logged successfully!"
