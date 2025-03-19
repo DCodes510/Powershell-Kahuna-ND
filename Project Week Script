@@ -4,18 +4,18 @@
 $datethreshold = (get-date).AddDays(-30)
 $30daynouse = get-aduser -filter {Enabled -eq $true -and Lastlogondate -lt $datethreshold} -properties Lastlogondate
 $disabledcontainer = "OU=disabled users,DC=contoso,DC=com"
-$DisUserList = "E\DisabledUsers\DisabledUsers.txt"
+$DisUserList = "E:\DisabledUsers\DisabledUsers.txt"
 $movedate = (get-date -Format "MM:dd:yyyy hh:mm:ss")
 $moveduser = (get-aduser -filter {Enabled -eq $true -and Lastlogondate -lt $datethreshold} -properties Lastlogondate).name
-$logmessge = $moveduser disabled on $movedate
+$logmessage = "$moveduser disabled on $movedate"
 
 ###Script
 foreach($inactiveusers in $30daynouse) {
-            write-host "$($inactiveusers.samaccountname) moved due to last logon was $($inactiveusers.Lastlogdate)"
+            write-host "$($inactiveusers.samaccountname) moved due to last logon was $($inactiveusers.Lastlogondate)"
 
             Move-ADObject -Identity $inactiveusers.distinguishedname -TargetPath $disabledcontainer
 
-            Add-content -Path $DisUserList -Value $logmessge
+            Add-content -Path $DisUserList -Value $logmessage
             }
 
 Write-host "Inactive user moved to Disabled Users Container"
