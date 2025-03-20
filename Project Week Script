@@ -1,4 +1,7 @@
 ###Move Disable User out of current container
+###For lab environment script utilizing ADDS
+###Need to create "Disabled Users" OU in ADDS
+###Need to create file location for logs
 
 ##Variables
 $datethreshold = (get-date).AddDays(-30)
@@ -8,22 +11,81 @@ $DisUserList = "E:\DisabledUsers\DisabledUsers.txt"
 $movedate = (get-date -Format "MM-dd-yyyy hh:mm:ss")
 $moveduser = (get-aduser -filter {Enabled -eq $true -and Lastlogondate -lt $datethreshold} -properties Lastlogondate).name
 $logmessage = "$moveduser disabled on $movedate"
+$Disuser = get-aduser -filter {enabled -eq $true} -searchbase $disabledcontainer
+##$Disuser = get-aduser -filter * -searchbase "OU=Disabled Users,DC=Contoso,DC=com" -properties * | select-object -Property givenName,Enabled
 
-###Script
+###scneraio 2 
+if($30daynouse) {
+        foreach($inactiveusers in $30daynouse) {
+                "   "        
+                Start-Sleep -Seconds 2
+                write-host "$($inactiveusers.samaccountname) moved due to last logon was $($inactiveusers.Lastlogondate)"
+                Move-ADObject -Identity $inactiveusers.distinguishedname -TargetPath $disabledcontainer
+                "   "
+                Add-content -Path $DisUserList -Value $logmessage
+                Write-host "Creating Log"
+                "   "
+                start-sleep -Seconds 5
+                Disable-ADAccount -Identity $inactiveusers.samaccountname
+
+                Write-host "Inactive user moved to Disabled Users Container"
+                } 
+}
+else {
+    get-aduser -filter {enabled -eq $false -and lastlogondate -lt $datethreshold}
+    write-host "No inactive users found at this time"
+     }
+
+
+
+
+###Need to add trigger and test 
+
+$action = new-scheduledtaskaction -execute "powershell_ise.exe" -Argument "E:\Disabled\30daynouse.ps1" -WorkingDirectory "E:\DisableUsers"
+$actiontrig = new-schediledtasktrigger -weekly -daysofweek Saturday -at 10:00pm
+#$principal = New-ScheduledTaskPrincipal -Id Contoso\Administrator -runlevel Highest
+$task = New-scheduledtask -Description "Inactive User sweep" -InputObject $action -Principal $principal -Trigger $actiontrig
+Register-ScheduledTask -TaskName "30daynouser user sweep" -Input $task -taskpath \DisabledUsers -Force
+
+
+####Scenario 3#############################################################
+if($30daynouse) {
+    foreach($inactiveusers in $30daynouse) {
+        get-aduser -filter {enabled -eq $false -and lastlogondate -lt $datethreshold}
+        write-host "No inactive users found at this time"    
+        } 
+else {
+    "   "        
+    Start-Sleep -Seconds 5
+    write-host "$($inactiveusers.samaccountname) moved due to last logon was $($inactiveusers.Lastlogondate)"
+    "   "    
+    start-sleep -Seconds 5
+    Move-ADObject -Identity $inactiveusers.distinguishedname -TargetPath $disabledcontainer
+
+    Add-content -Path $DisUserList -Value $logmessage
+
+    start-sleep -Seconds 10
+    Disable-ADAccount -Identity $Disuser.samaccountname
+
+    Write-host "Inactive user moved to Disabled Users Container"
+    }
+}
+
+###Script √
 foreach($inactiveusers in $30daynouse) {
-            Start-Sleep -Seconds 5
-            write-host "$($inactiveusers.samaccountname) moved due to last logon was $($inactiveusers.Lastlogondate)"
-            start-sleep -Seconds 5
-            Move-ADObject -Identity $inactiveusers.distinguishedname -TargetPath $disabledcontainer
+    "   "        
+    Start-Sleep -Seconds 5
+    write-host "$($inactiveusers.samaccountname) moved due to last logon was $($inactiveusers.Lastlogondate)"
+    "   "    
+    start-sleep -Seconds 5
+    Move-ADObject -Identity $inactiveusers.distinguishedname -TargetPath $disabledcontainer
 
-            Add-content -Path $DisUserList -Value $logmessage
-            }
+    Add-content -Path $DisUserList -Value $logmessage
 
-Write-host "Inactive user moved to Disabled Users Container"
+    Disable-ADAccount -Identity $Disuser
 
-
-###Need to add trigger 
-
-
-
-
+    Write-host "Inactive user moved to Disabled Users Container"
+    } 
+    else {
+        write-host "No inactive users found at this time"
+    }
