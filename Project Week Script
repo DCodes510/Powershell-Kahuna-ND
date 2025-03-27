@@ -3,18 +3,21 @@
 ###Need to create "Disabled Users" OU in ADDS
 ###Need to create file location for logs
 
-##Variables
+New-ADOrganizationalUnit -name "Disabled Users" -path "DC=contoso,DC=com"
+
+
+###Variables
 $datethreshold = (get-date).AddDays(-30)
 $30daynouse = get-aduser -filter {Enabled -eq $true -and Lastlogondate -lt $datethreshold} -properties Lastlogondate
 $disabledcontainer = "OU=disabled users,DC=contoso,DC=com"
 $DisUserList = "E:\DisabledUsers\DisabledUsers.txt"
-$movedate = (get-date -Format "MM-dd-yyyy hh:mm:ss")
+$movedate = (get-date -Format "MM-dd-yyyy HH:mm:ss")
 $moveduser = (get-aduser -filter {Enabled -eq $true -and Lastlogondate -lt $datethreshold} -properties Lastlogondate).name
 $logmessage = "$moveduser disabled on $movedate"
-$Disuser = get-aduser -filter {enabled -eq $true} -searchbase $disabledcontainer
+$Disuser = get-aduser -filter {enabled -eq $true} -searchbase "OU=Disabled Users,DC=contoso,DC=com"
 ##$Disuser = get-aduser -filter * -searchbase "OU=Disabled Users,DC=Contoso,DC=com" -properties * | select-object -Property givenName,Enabled
 
-###scneraio 2 
+###scenario 1
 if($30daynouse) {
         foreach($inactiveusers in $30daynouse) {
                 "   "        
@@ -32,7 +35,7 @@ if($30daynouse) {
                 } 
 }
 else {
-    get-aduser -filter {enabled -eq $false -and lastlogondate -lt $datethreshold}
+    get-aduser -filter {enabled -eq $false -and lastlogondate -lt $datethreshold} -searchbase "DC=contoso,DC=com"
     write-host "No inactive users found at this time"
      }
 
@@ -48,7 +51,7 @@ $task = New-scheduledtask -Description "Inactive User sweep" -InputObject $actio
 Register-ScheduledTask -TaskName "30daynouser user sweep" -Input $task -taskpath \DisabledUsers -Force
 
 
-####Scenario 3#############################################################
+####Scenario 2#############################################################
 if($30daynouse) {
     foreach($inactiveusers in $30daynouse) {
         get-aduser -filter {enabled -eq $false -and lastlogondate -lt $datethreshold}
@@ -71,7 +74,7 @@ else {
     }
 }
 
-###Script √
+###Script 1√
 foreach($inactiveusers in $30daynouse) {
     "   "        
     Start-Sleep -Seconds 5

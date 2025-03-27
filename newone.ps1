@@ -128,7 +128,7 @@ Pause
     elseif (condition){doing part}
     elseif (condition){doing part}
     else {doing part}
-#} 
+}
 #WHILE (condition)
 
 
